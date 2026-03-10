@@ -66,6 +66,11 @@ const App = () => {
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error del servidor (${response.status})`);
+      }
+
       const result = await response.json();
       setAnalysis(result);
 
@@ -83,7 +88,7 @@ const App = () => {
       setView('result');
     } catch (err) {
       console.error("Error analyzing photo:", err);
-      alert("Error al analizar la imagen. Intentando de nuevo...");
+      alert(`Error al analizar la imagen: ${err.message}`);
       setView('camera');
     }
   };

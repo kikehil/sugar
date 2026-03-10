@@ -34,10 +34,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 app.post('/api/analyze-food', upload.single('image'), async (req, res) => {
+  console.log('--- Nueva solicitud recibida ---');
   try {
     if (!req.file) {
+      console.error('Error: No se subió ninguna imagen');
       return res.status(400).json({ error: 'No image uploaded' });
     }
+    console.log('Imagen subida:', req.file.path);
+    console.log('Descripción recibida:', req.body.description || 'Ninguna');
 
     const API_KEY = process.env.GEMINI_API_KEY;
 
@@ -77,10 +81,18 @@ app.post('/api/analyze-food', upload.single('image'), async (req, res) => {
     const result = await model.generateContent([prompt, imagePart]);
     const response = await result.response;
     const text = response.text();
+    console.log('Respuesta de Gemini:', text);
 
     // Clean text in case Gemini adds markdown backticks
     const cleanJsonText = text.replace(/```json|```/g, "").trim();
-    const jsonResult = JSON.parse(cleanJsonText);
+    let jsonResult;
+    try {
+      jsonResult = JSON.parse(cleanJsonText);
+    } catch (parseError) {
+      console.error('Error parseando JSON de Gemini:', parseError);
+      console.error('Texto original:', text);
+      return res.status(500).json({ error: 'Error al procesar la respuesta de la IA' });
+    }
 
     res.json(jsonResult);
 
