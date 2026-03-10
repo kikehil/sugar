@@ -13,6 +13,10 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Backend NutriScan es alcanzable', time: new Date().toISOString() });
+});
+
 // Gemini Config
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -45,17 +49,14 @@ app.post('/api/analyze-food', upload.single('image'), async (req, res) => {
 
     const API_KEY = process.env.GEMINI_API_KEY;
 
-    if (!API_KEY) {
+    if (!API_KEY || API_KEY === "") {
       console.warn('GEMINI_API_KEY no configurada. Usando datos simulados.');
-      return setTimeout(() => {
-        res.json({
-          foods: [
-            { name: 'Ensalada César', grams: 250, calories: 350, carbs: 15, protein: 25, fat: 22 },
-            { name: 'Pan de ajo', grams: 50, calories: 150, carbs: 20, protein: 4, fat: 8 }
-          ],
-          totals: { calories: 500, carbs: 35, protein: 29, fat: 30 }
-        });
-      }, 2000);
+      return res.json({
+        foods: [
+          { name: 'Platillo Simulado (No hay API Key)', grams: 300, calories: 450, carbs: 40, protein: 20, fat: 15 }
+        ],
+        totals: { calories: 450, carbs: 40, protein: 20, fat: 15 }
+      });
     }
 
     // Convert image to base64 for Gemini
